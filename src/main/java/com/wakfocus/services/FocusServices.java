@@ -43,6 +43,7 @@ public class FocusServices {
     private static final int HEIGHT_RECT = 3;
     private static final int THREAD_SLEEP_MILLISECONDS = 500;
     private static final Color COLOR_REFERENCE = new Color(219, 160, 88);
+    private static final Color COLOR_REFERENCE_VELOCITE = new Color(59, 55, 41);
 
     private static boolean RUNNING = true;
     private static boolean focusApplication = false;
@@ -81,12 +82,13 @@ public class FocusServices {
             }
             BufferedImage image = captureBottomRight(hWnd, WIDTH_RECT, HEIGHT_RECT);
             boolean result = containsColor(image, COLOR_REFERENCE, TOLERANCE_COLOR);
+            boolean resultVelocite = containsColor(image, COLOR_REFERENCE_VELOCITE, TOLERANCE_COLOR);
 
-            if (result && !isYourTurn) {
+            if ((result || resultVelocite) && !isYourTurn) {
                 // C'est à lui de jouer
                 wakfuYourTurnMap.put(hWnd, true);
                 notifyFocusUser(hWnd);
-            } else if (!result && isYourTurn) {
+            } else if ((!result && !resultVelocite) && isYourTurn) {
                 // Ce n'est plus à lui de jouer
                 wakfuYourTurnMap.put(hWnd, false);
             }
