@@ -9,6 +9,7 @@ import javafx.stage.Stage;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.Scene;
+import javafx.scene.control.Hyperlink;
 import javafx.scene.control.Label;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
@@ -29,7 +30,7 @@ public class WakFocusUI extends Application {
     private double yOffset = 0;
 
     private static final double WIDTH = 500;
-    private static final double HEIGHT = 300;
+    private static final double HEIGHT = 400;
     private static final double HEADER_HEIGHT = 48;
 
     private StackPane createStackPaneButton(String text) {
@@ -86,6 +87,7 @@ public class WakFocusUI extends Application {
         stage.getIcons().add(logo);
 
         StackPane root = new StackPane();
+        root.setStyle("-fx-background-radius: 20px; -fx-background-color: transparent;");
 
         // ===== BACKGROUND IMAGE =====
 
@@ -100,7 +102,7 @@ public class WakFocusUI extends Application {
 
         // ===== HEADER PERSONNALISÉ =====
         StackPane header = createHeader(stage, root);
-        header.setPadding(new Insets(0, 0,  HEADER_HEIGHT + 10, 0));
+        header.setPadding(new Insets(0, 0, HEADER_HEIGHT + 10, 0));
 
         // ===== CONTENU =====
         VBox content = createContent();
@@ -122,7 +124,7 @@ public class WakFocusUI extends Application {
     private VBox createContent() {
         VBox container = new VBox();
 
-        container.setPadding(new Insets( 0, 0, 0, WIDTH * 0.05));
+        container.setPadding(new Insets(0, 0, 0, WIDTH * 0.05));
 
         // ===== BACKGROUND IMAGE =====
         Image bgImage = new Image(getClass().getResource("/images/NP-window-1.png").toExternalForm());
@@ -139,15 +141,34 @@ public class WakFocusUI extends Application {
         title.setStyle("-fx-font-size: 24px; -fx-text-fill: #FFFFFF; -fx-font-weight: bold;");
         title.setPadding(new Insets(5, 0, 20, 10));
 
-        HBox focus = createCheckbox("Activer le focus automatique sur Wakfu", FocusServices.isFocusApplication(), () -> FocusServices.handleFocusApplication());
-        HBox notifications = createCheckbox("Activer les notifications de focus sur Wakfu", FocusServices.isNotifyUser(), () -> FocusServices.handleNotifyUser());
+        HBox focus = createCheckbox("Activer le focus automatique sur Wakfu", FocusServices.isFocusApplication(),
+                () -> FocusServices.handleFocusApplication());
+        HBox notifications = createCheckbox("Activer les notifications de focus sur Wakfu",
+                FocusServices.isNotifyUser(), () -> FocusServices.handleNotifyUser());
 
+        // ===== GEARFU =====
+        ImageView logo = new ImageView(
+                new Image(getClass().getResource("/images/logo_gearfu.png").toExternalForm()));
+        logo.setPreserveRatio(true);
+        logo.setFitHeight(32);
+        logo.setFitWidth(32);
+        Hyperlink gearfuLink = new Hyperlink("Gearfu - Trieur d'items");
+        gearfuLink.setOnAction(e -> {
+            // Ouvrir le lien Gearfu
+            getHostServices().showDocument("https://naquos.github.io/Gearfu");
+        });
+
+        HBox gearfuContainer = new HBox(10, logo, gearfuLink);
+        gearfuContainer.setPadding(new Insets(5, 0, 20, 10));
+
+        // ===== FOOTER =====
         Label footer = new Label(
                 "WAKFU MMORPG : © 2012-" + LocalDate.now().getYear() + " Ankama Studio. Tous droits réservés");
         footer.setStyle("-fx-font-size: 12px; -fx-text-fill: #FFFFFF;");
         footer.setAlignment(Pos.BOTTOM_CENTER);
+        footer.setPadding(new Insets(0, 0, 0, 30));
 
-        container.getChildren().addAll(title, focus, notifications, footer);
+        container.getChildren().addAll(title, focus, notifications, gearfuContainer, footer);
         return container;
     }
 
@@ -234,6 +255,7 @@ public class WakFocusUI extends Application {
 
     private HBox createMinimizeCloseButtons(Stage stage) {
         StackPane minimizeBtn = createStackPaneButton("_");
+        minimizeBtn.setOnMouseClicked(e -> stage.setIconified(true));
 
         StackPane closeBtn = createStackPaneButton("X");
         closeBtn.setOnMouseClicked(e -> {
