@@ -34,14 +34,15 @@ public class FocusServices {
     private static boolean focusApplication = false;
     private static boolean notifyUser = true;
     private static BufferedImage bImage = null;
+    private static ConfigManager configManager = new ConfigManager();
 
     public static void run() throws InterruptedException, IOException {
         User32 user32 = User32.INSTANCE;
         Map<HWND, String> processMap = new HashMap<>();
         ExecutorService executor = Executors.newSingleThreadExecutor();
         bImage = ImageIO.read(FocusServices.class.getResource("/images/logo.png"));
-
-        System.out.println("Fenêtres visibles :");
+        focusApplication = configManager.getFocusApplication();
+        notifyUser = configManager.getNotifyUser();
 
         executor.submit(() -> {
             while (RUNNING) {
@@ -55,7 +56,6 @@ public class FocusServices {
                             if (!wText.isEmpty() && wText.contains(WAKFU)) {
                                 String processTitle = processMap.get(hWnd);
                                 if (processTitle == null || !processTitle.equals(wText)) {
-                                    System.out.println("HWND: " + hWnd + " | Titre: " + wText);
                                     processMap.put(hWnd, wText);
 
                                     if (focusApplication) {
@@ -66,7 +66,6 @@ public class FocusServices {
                                         try {
                                             notifyUser(wText.split(WAKFU)[0], hWnd);
                                         } catch (AWTException e) {
-                                            // TODO Auto-generated catch block
                                             e.printStackTrace();
                                         }
                                     }
@@ -78,7 +77,7 @@ public class FocusServices {
 
                     Thread.sleep(500); // Pause de 0.5 secondes avant la prochaine énumération
                 } catch (Exception e) {
-                    // TODO: handle exception
+                    e.printStackTrace();
                 }
             }
 
@@ -95,11 +94,12 @@ public class FocusServices {
 
     public static void handleFocusApplication() {
         focusApplication = !focusApplication;
-
+        configManager.setFocusApplication(focusApplication);
     }
 
     public static void handleNotifyUser() {
         notifyUser = !notifyUser;
+        configManager.setNotifyUser(notifyUser);
     }
 
     public static void stopRunning() {
