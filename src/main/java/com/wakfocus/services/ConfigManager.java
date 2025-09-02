@@ -7,7 +7,9 @@ import java.io.IOException;
 import java.util.Properties;
 
 public class ConfigManager {
-    private static final String CONFIG_FILE = "config.properties";
+    private static final String CONFIG_FILE = System.getProperty("user.home")
+            + File.separator + ".wakfocus"
+            + File.separator + "config.properties";
     private Properties properties;
 
     public ConfigManager() {
@@ -17,8 +19,11 @@ public class ConfigManager {
 
     private void loadOrCreateConfig() {
         File file = new File(CONFIG_FILE);
+        File parentDir = file.getParentFile();
+        if (!parentDir.exists()) {
+            parentDir.mkdirs(); // crée le dossier .wakfocus dans le home
+        }
         if (!file.exists()) {
-            // Si le fichier n'existe pas, on le crée avec des valeurs par défaut
             properties.setProperty("focusApplication", "true");
             properties.setProperty("notifyUser", "false");
             saveConfig();
