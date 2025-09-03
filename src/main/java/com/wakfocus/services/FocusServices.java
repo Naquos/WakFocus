@@ -5,11 +5,19 @@ import dorkbox.notify.Position;
 import dorkbox.notify.Theme;
 
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.Map;
 import java.util.concurrent.Executors;
 
 import javax.imageio.ImageIO;
+import javax.swing.ImageIcon;
+import javax.swing.JFrame;
+import javax.swing.JLabel;
 
+import java.awt.AWTException;
+import java.awt.BorderLayout;
+import java.awt.Color;
+import java.awt.Graphics;
 import java.awt.image.BufferedImage;
 import java.io.IOException;
 
@@ -29,7 +37,6 @@ import com.sun.jna.platform.win32.WinDef.HBITMAP;
 import com.sun.jna.Memory;
 import com.sun.jna.platform.win32.WinGDI;
 
-import java.awt.*;
 import java.awt.image.DataBufferInt;
 
 public class FocusServices {
@@ -38,12 +45,33 @@ public class FocusServices {
     private static final String TITLE = "WakFocus";
     private static final String WAKFU = "- WAKFU";
     private static final int DELAY_NOTIFICATION = 5000;
-    private static final int TOLERANCE_COLOR = 10;
-    private static final int WIDTH_RECT = 10;
-    private static final int HEIGHT_RECT = 3;
-    private static final int THREAD_SLEEP_MILLISECONDS = 500;
-    private static final Color COLOR_REFERENCE = new Color(219, 160, 88);
-    private static final Color COLOR_REFERENCE_VELOCITE = new Color(59, 55, 41);
+
+    private static final int WIDTH_RECT_BOTTOM_RIGHT = 20;
+    private static final int HEIGHT_RECT_BOTTOM_RIGHT = 20;
+    private static final int WIDTH_RECT_BOTTOM_CENTER = 100;
+    private static final int HEIGHT_RECT_BOTTOM_CENTER = 40;
+
+    private static final int PIXEL_GOOD_COLOR = 20;
+    private static final int PIXEL_GOOD_COLOR_MAJOR = 20;
+    private static final int THREAD_SLEEP_MILLISECONDS = 1000;
+
+    private static final Color COLOR_REFERENCE = new Color(219, 177, 115);
+    private static final Color COLOR_REFERENCE_VELOCITE = new Color(59, 60, 48);
+    private static final Color COLOR_WHITE = new Color(255, 255, 255);
+    private static final Color COLOR_WHITE_VELOCITE = new Color(63, 74, 78);
+    private static final Color COLOR_BLUE = new Color(11, 145, 227);
+    private static final Color COLOR_BLUE_VELOCITE = new Color(6, 47, 75);
+    private static final Color COLOR_GREEN = new Color(117, 179, 36);
+    private static final Color COLOR_GREEN_VELOCITE = new Color(31, 59, 32);
+
+    private static final int TOLERANCE_COLOR = 30;
+    private static final int TOLERANCE_COLOR_VELOCITE = 7;
+    private static final int TOLERANCE_COLOR_WHITE = 20;
+    private static final int TOLERANCE_COLOR_WHITE_VELOCITE = 30;
+    private static final int TOLERANCE_COLOR_BLUE = 30;
+    private static final int TOLERANCE_COLOR_BLUE_VELOCITE = 30;
+    private static final int TOLERANCE_COLOR_GREEN = 30;
+    private static final int TOLERANCE_COLOR_GREEN_VELOCITE = 30;
 
     private static boolean RUNNING = true;
     private static boolean focusApplication = false;
@@ -51,6 +79,72 @@ public class FocusServices {
     private static BufferedImage bImage = null;
     private static ConfigManager configManager = new ConfigManager();
     private static Map<HWND, Boolean> wakfuYourTurnMap = new HashMap<>();
+
+    // =============== POUR TESTER L APPLI =================
+    private static JFrame previewFrame;
+    private static JLabel previewLabel;
+    private static javax.swing.Timer previewTimer;
+
+    private static BufferedImage maskByColor(BufferedImage img) {
+        BufferedImage masked = new BufferedImage(img.getWidth(), img.getHeight(), BufferedImage.TYPE_INT_ARGB);
+
+        for (int x = 0; x < img.getWidth(); x++) {
+            for (int y = 0; y < img.getHeight(); y++) {
+                Color c = new Color(img.getRGB(x, y));
+                if (isClose(c, COLOR_REFERENCE, TOLERANCE_COLOR)
+                        || isClose(c, COLOR_REFERENCE_VELOCITE, TOLERANCE_COLOR_VELOCITE)
+                        || isClose(c, COLOR_BLUE, TOLERANCE_COLOR_BLUE)
+                        || isClose(c, COLOR_WHITE, TOLERANCE_COLOR_WHITE)
+                        || isClose(c, COLOR_GREEN, TOLERANCE_COLOR_GREEN)
+                        || isClose(c, COLOR_GREEN_VELOCITE, TOLERANCE_COLOR_GREEN_VELOCITE)
+                        || isClose(c, COLOR_WHITE_VELOCITE, TOLERANCE_COLOR_WHITE_VELOCITE)
+                        || isClose(c, COLOR_BLUE_VELOCITE, TOLERANCE_COLOR_BLUE_VELOCITE)
+                        ) {
+                    masked.setRGB(x, y, c.getRGB()); // garde la couleur
+                } else {
+                    masked.setRGB(x, y, Color.BLACK.getRGB()); // sinon noir
+                }
+            }
+        }
+        return masked;
+    }
+
+    public static void showPreview(HWND hwnd) {
+        if (previewFrame != null) {
+            previewFrame.dispose();
+            previewFrame = null;
+            previewLabel = null;
+            previewTimer.stop();
+            previewTimer = null;
+        }
+
+        previewFrame = new JFrame("Preview Capture");
+        previewFrame.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
+        previewFrame.setSize(400, 200);
+
+        previewLabel = new JLabel();
+        previewLabel.setHorizontalAlignment(JLabel.CENTER);
+        previewFrame.add(previewLabel, BorderLayout.CENTER);
+
+        // Timer Swing → rafraîchit l’image toutes les 500 ms
+        previewTimer = new javax.swing.Timer(500, e -> {
+            try {
+                BufferedImage img = captureBottomRight(hwnd);
+                // BufferedImage img = captureBottomCenter(hwnd);
+                if (img != null) {
+                    BufferedImage masked = maskByColor(img);
+                    // BufferedImage masked = img;
+                    previewLabel.setIcon(new ImageIcon(masked));
+                }
+            } catch (Exception ex) {
+                ex.printStackTrace();
+            }
+        });
+
+        previewFrame.setVisible(true);
+        previewTimer.start();
+    }
+    // =================================================
 
     public static void run() throws InterruptedException, IOException {
         init();
@@ -70,29 +164,60 @@ public class FocusServices {
         });
     }
 
+    private static boolean isInFight(HWND hwnd) {
+        boolean result = false;
+        BufferedImage bImage = captureBottomCenter(hwnd);
+        result = (containsColor(bImage, COLOR_BLUE, TOLERANCE_COLOR_BLUE, PIXEL_GOOD_COLOR_MAJOR)
+                && containsColor(bImage, COLOR_GREEN, TOLERANCE_COLOR_GREEN, PIXEL_GOOD_COLOR_MAJOR)
+                && containsColor(bImage, COLOR_WHITE, TOLERANCE_COLOR_WHITE, PIXEL_GOOD_COLOR_MAJOR))
+                || (containsColor(bImage, COLOR_BLUE_VELOCITE, TOLERANCE_COLOR_BLUE_VELOCITE, PIXEL_GOOD_COLOR_MAJOR)
+                        && containsColor(bImage, COLOR_GREEN_VELOCITE, TOLERANCE_COLOR_GREEN_VELOCITE,
+                                PIXEL_GOOD_COLOR_MAJOR)
+                        && containsColor(bImage, COLOR_WHITE_VELOCITE, TOLERANCE_COLOR_WHITE_VELOCITE,
+                                PIXEL_GOOD_COLOR_MAJOR));
+
+        bImage.flush();
+        System.out.println("Est dans un combat : " + result);
+        return result;
+    }
+
     private static void checkIfItsYourTurn() {
         User32 user32 = User32.INSTANCE;
-        wakfuYourTurnMap.forEach((hWnd, isYourTurn) -> {
+        Iterator<Map.Entry<HWND, Boolean>> iterator = wakfuYourTurnMap.entrySet().iterator();
+
+        while (iterator.hasNext()) {
+            Map.Entry<HWND, Boolean> entry = iterator.next();
+            HWND hWnd = entry.getKey();
+            boolean isYourTurn = entry.getValue();
+
             RECT rect = new RECT();
             boolean exists = user32.GetWindowRect(hWnd, rect);
             if (!exists) {
                 // La fenêtre n'existe plus, on la retire de la map
-                wakfuYourTurnMap.remove(hWnd);
+                iterator.remove();
                 return;
             }
-            BufferedImage image = captureBottomRight(hWnd, WIDTH_RECT, HEIGHT_RECT);
-            boolean result = containsColor(image, COLOR_REFERENCE, TOLERANCE_COLOR);
-            boolean resultVelocite = containsColor(image, COLOR_REFERENCE_VELOCITE, TOLERANCE_COLOR);
+            if (isInFight(hWnd)) {
 
-            if ((result || resultVelocite) && !isYourTurn) {
-                // C'est à lui de jouer
-                wakfuYourTurnMap.put(hWnd, true);
-                notifyFocusUser(hWnd);
-            } else if ((!result && !resultVelocite) && isYourTurn) {
-                // Ce n'est plus à lui de jouer
-                wakfuYourTurnMap.put(hWnd, false);
+                BufferedImage image = captureBottomRight(hWnd);
+                boolean result = containsColor(image, COLOR_REFERENCE, TOLERANCE_COLOR, PIXEL_GOOD_COLOR);
+                boolean resultVelocite = containsColor(image, COLOR_REFERENCE_VELOCITE, TOLERANCE_COLOR_VELOCITE,
+                        PIXEL_GOOD_COLOR);
+                boolean resultWhiteColor = true;
+
+                if (resultWhiteColor && (result || resultVelocite) && !isYourTurn) {
+                    // C'est à lui de jouer
+                    wakfuYourTurnMap.put(hWnd, true);
+                    notifyFocusUser(hWnd);
+                } else if ((!result && !resultVelocite) && isYourTurn) {
+                    // Ce n'est plus à lui de jouer
+                    wakfuYourTurnMap.put(hWnd, false);
+                }
+
+                image.flush();
             }
-        });
+
+        }
     }
 
     public static String getWindowTitle(HWND hWnd) {
@@ -116,21 +241,20 @@ public class FocusServices {
     }
 
     // Vérifie si une couleur précise est présente dans la capture
-    public static boolean containsColor(BufferedImage img, Color target, int tolerance) {
+    public static boolean containsColor(BufferedImage img, Color target, int tolerance, int minPixels) {
         int colorOk = 0;
-        int colorKo = 0;
         for (int x = 0; x < img.getWidth(); x++) {
             for (int y = 0; y < img.getHeight(); y++) {
                 Color c = new Color(img.getRGB(x, y));
                 if (isClose(c, target, tolerance)) {
                     colorOk++;
-                } else {
-                    colorKo++;
+                    if (colorOk >= minPixels) {
+                        return true; // on s'arrête dès qu'on a assez de pixels
+                    }
                 }
             }
         }
-        // Logique pour déterminer si la couleur est présente
-        return colorOk > colorKo;
+        return false;
     }
 
     private static boolean isClose(Color c1, Color c2, int tolerance) {
@@ -147,15 +271,20 @@ public class FocusServices {
                 user32.GetWindowText(hWnd, windowText, 512);
                 String wText = Native.toString(windowText);
 
-                if (!wText.isEmpty() && wText.contains(WAKFU) &&  wakfuYourTurnMap.get(hWnd) == null) {
+                if (!wText.isEmpty() && wText.contains(WAKFU) && wakfuYourTurnMap.get(hWnd) == null) {
                     wakfuYourTurnMap.put(hWnd, false);
+                    // showPreview(hWnd);
                 }
             }
             return true;
         }, Pointer.NULL);
     }
 
-    public static BufferedImage captureBottomRight(HWND hwnd, int cropWidth, int cropHeight) {
+    public static BufferedImage captureRelative(HWND hwnd,
+            double relX, double relY,
+            int cropWidth, int cropHeight,
+            double yOffsetPercent,
+            double xOffsetPercent) {
         RECT rect = new RECT();
         User32.INSTANCE.GetWindowRect(hwnd, rect);
         int width = rect.right - rect.left;
@@ -167,10 +296,10 @@ public class FocusServices {
         HBITMAP hBitmap = GDI32.INSTANCE.CreateCompatibleBitmap(hdcWindow, width, height);
         GDI32.INSTANCE.SelectObject(hdcMemDC, hBitmap);
 
-        // Capture complète de la fenêtre
+        // Capture complète
         User32.INSTANCE.PrintWindow(hwnd, hdcMemDC, 0);
 
-        // Conversion → BufferedImage complet
+        // Conversion en BufferedImage
         BufferedImage fullImage = convertHBitmapToBufferedImage(hBitmap, width, height, hdcMemDC);
 
         // Nettoyage
@@ -178,13 +307,59 @@ public class FocusServices {
         GDI32.INSTANCE.DeleteDC(hdcMemDC);
         User32.INSTANCE.ReleaseDC(hwnd, hdcWindow);
 
-        int yOffset = 14;
+        // ---- Calcul des coordonnées de départ ----
+        int xOffset = (int) (width * xOffsetPercent);
+        int x = (int) (width * relX) + xOffset;
+        int yOffset = (int) (height * yOffsetPercent);
+        int y = (int) (height * relY) - cropHeight - yOffset;
 
-        // ---- CROP (coin bas-droit) ----
-        int x = Math.max(0, width - cropWidth);
-        int y = Math.max(0, height - cropHeight - yOffset);
+        // ✅ Bornes pour éviter RasterFormatException
+        if (x < 0)
+            x = 0;
+        if (y < 0)
+            y = 0;
+        if (x + cropWidth > width)
+            cropWidth = width - x;
+        if (y + cropHeight > height)
+            cropHeight = height - y;
 
-        return fullImage.getSubimage(x, y, cropWidth, cropHeight);
+        if (cropWidth <= 0 || cropHeight <= 0) {
+            throw new IllegalArgumentException("Zone de capture invalide (taille négative ou nulle)");
+        }
+
+        BufferedImage cropped = new BufferedImage(cropWidth, cropHeight, BufferedImage.TYPE_INT_ARGB);
+        Graphics g = cropped.getGraphics();
+        g.drawImage(fullImage, 0, 0, cropWidth, cropHeight, x, y, x + cropWidth, y + cropHeight, null);
+        g.dispose();
+
+        fullImage.flush(); // libère la mémoire de l’image complète
+        return cropped;
+    }
+
+    private static int getWindowWidth(HWND hwnd) {
+        RECT rect = new RECT();
+        User32.INSTANCE.GetWindowRect(hwnd, rect);
+        return rect.right - rect.left;
+    }
+
+    // Coin bas-droit
+    public static BufferedImage captureBottomRight(HWND hwnd) {
+        return captureRelative(hwnd,
+                1.0 - ((double) WIDTH_RECT_BOTTOM_RIGHT / getWindowWidth(hwnd)), // X aligné à droite
+                1.0, // Y en bas
+                WIDTH_RECT_BOTTOM_RIGHT,
+                HEIGHT_RECT_BOTTOM_RIGHT,
+                0.01f, 0);
+    }
+
+    // Milieu bas
+    public static BufferedImage captureBottomCenter(HWND hwnd) {
+        return captureRelative(hwnd,
+                0.5 - ((double) WIDTH_RECT_BOTTOM_CENTER / 2.0 / getWindowWidth(hwnd)), // X centré
+                1.0, // Y en bas
+                WIDTH_RECT_BOTTOM_CENTER,
+                HEIGHT_RECT_BOTTOM_CENTER,
+                0.05, 0.02);
     }
 
     public static BufferedImage convertHBitmapToBufferedImage(HBITMAP hBitmap, int width, int height, HDC hdc) {
