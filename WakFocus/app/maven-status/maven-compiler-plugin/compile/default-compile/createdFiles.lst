@@ -1,0 +1,11 @@
+com\wakfocus\services\ConfigManager.class
+com\wakfocus\services\FocusService.class
+com\wakfocus\utils\FocusColorUtils.class
+com\wakfocus\utils\ColorRule.class
+com\wakfocus\services\NotificationService.class
+com\wakfocus\utils\RuleSets.class
+com\wakfocus\WakFocus.class
+com\wakfocus\utils\WindowUtils.class
+com\wakfocus\UI\WakFocusUI.class
+com\wakfocus\models\TurnDescriptions.class
+com\wakfocus\services\ScreenCaptureService.class
