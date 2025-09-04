@@ -2,7 +2,8 @@ package com.wakfocus.UI;
 
 import java.time.LocalDate;
 
-import com.wakfocus.services.FocusServices;
+import com.wakfocus.services.FocusService;
+import com.wakfocus.services.NotificationService;
 
 import javafx.application.Application;
 import javafx.stage.Stage;
@@ -141,10 +142,10 @@ public class WakFocusUI extends Application {
         title.setStyle("-fx-font-size: 24px; -fx-text-fill: #FFFFFF; -fx-font-weight: bold;");
         title.setPadding(new Insets(5, 0, 20, 10));
 
-        HBox focus = createCheckbox("Activer le focus automatique sur Wakfu", FocusServices.isFocusApplication(),
-                () -> FocusServices.handleFocusApplication());
+        HBox focus = createCheckbox("Activer le focus automatique sur Wakfu", FocusService.isFocusApplication(),
+                () -> FocusService.toggleFocusApplication());
         HBox notifications = createCheckbox("Activer les notifications de focus sur Wakfu",
-                FocusServices.isNotifyUser(), () -> FocusServices.handleNotifyUser());
+                FocusService.isNotifyUser(), () -> FocusService.toggleNotifyUser());
 
         // ===== GEARFU =====
         ImageView logo = new ImageView(
@@ -201,11 +202,11 @@ public class WakFocusUI extends Application {
             if (checkboxImageView.getImage() == uncheckedImage) {
                 checkboxImageView.setImage(checkedImage);
                 label.setStyle(checkedStyle);
-                // FocusServices.handleFocusApplication();
+                // FocusService.handleFocusApplication();
             } else {
                 checkboxImageView.setImage(uncheckedImage);
                 label.setStyle(uncheckedStyle);
-                // FocusServices.handleFocusApplication();
+                // FocusService.handleFocusApplication();
             }
         });
 
@@ -259,8 +260,9 @@ public class WakFocusUI extends Application {
 
         StackPane closeBtn = createStackPaneButton("X");
         closeBtn.setOnMouseClicked(e -> {
+            FocusService.stopRunning();
+            NotificationService.shutdown();
             stage.close();
-            FocusServices.stopRunning();
         });
 
         HBox buttonsBox = new HBox(5, minimizeBtn, closeBtn);
