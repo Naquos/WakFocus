@@ -3,8 +3,11 @@ package com.wakfocus.utils;
 import com.sun.jna.Native;
 import com.sun.jna.Pointer;
 import com.sun.jna.platform.win32.User32;
+import com.sun.jna.platform.win32.WinUser;
+import com.sun.jna.platform.win32.WinUser.INPUT;
 import com.sun.jna.platform.win32.WinDef.HWND;
 import com.sun.jna.platform.win32.WinDef.RECT;
+import com.sun.jna.platform.win32.WinDef;
 import com.wakfocus.models.TurnDescriptions;
 
 import java.util.Map;
@@ -34,6 +37,17 @@ public class WindowUtils {
     }
 
     public static void focusApplication(HWND hWnd) {
+        simulateKeyPress();
         User32.INSTANCE.SetForegroundWindow(hWnd);
+    }
+
+    private static void simulateKeyPress() {
+        User32 user32 = User32.INSTANCE;
+        INPUT input = new INPUT();
+        input.type = new WinUser.DWORD(INPUT.INPUT_KEYBOARD);
+        input.input.setType("ki");
+        input.input.ki.wVk = new WinUser.WORD(0); // touche nulle
+        input.input.ki.dwFlags = new WinUser.DWORD(0); // key down
+        user32.SendInput(new WinDef.DWORD(1), (INPUT[]) new INPUT[] { input }, input.size());
     }
 }
