@@ -31,7 +31,7 @@ public class WakFocusUI extends Application {
     private double yOffset = 0;
 
     private static final double WIDTH = 500;
-    private static final double HEIGHT = 400;
+    private static final double HEIGHT = 410;
     private static final double HEADER_HEIGHT = 48;
 
     private StackPane createStackPaneButton(String text) {
@@ -144,8 +144,10 @@ public class WakFocusUI extends Application {
 
         HBox focus = createCheckbox("Activer le focus automatique sur Wakfu", FocusService.isFocusApplication(),
                 () -> FocusService.toggleFocusApplication());
-        HBox notifications = createCheckbox("Activer les notifications de focus sur Wakfu",
+        HBox notifications = createCheckbox("Activer les notifications de début de tour",
                 FocusService.isNotifyUser(), () -> FocusService.toggleNotifyUser());
+        HBox notificationsEndTurn = createCheckbox("Activer les notifications de fin de tour",
+                FocusService.isNotifyUserEndTurn(), () -> FocusService.toggleNotifyUserEndTurn());
 
         // ===== GEARFU =====
         ImageView logo = new ImageView(
@@ -169,7 +171,7 @@ public class WakFocusUI extends Application {
         footer.setAlignment(Pos.BOTTOM_CENTER);
         footer.setPadding(new Insets(0, 0, 0, 30));
 
-        container.getChildren().addAll(title, focus, notifications, gearfuContainer, footer);
+        container.getChildren().addAll(title, focus, notifications,notificationsEndTurn, gearfuContainer, footer);
         return container;
     }
 

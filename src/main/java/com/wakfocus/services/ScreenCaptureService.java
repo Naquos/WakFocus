@@ -2,6 +2,7 @@ package com.wakfocus.services;
 
 import java.awt.image.BufferedImage;
 import java.awt.image.DataBufferInt;
+import java.util.List;
 
 import com.sun.jna.Memory;
 import com.sun.jna.platform.win32.GDI32;
@@ -9,7 +10,10 @@ import com.sun.jna.platform.win32.User32;
 import com.sun.jna.platform.win32.WinDef.*;
 import com.sun.jna.platform.win32.WinGDI;
 import com.sun.jna.platform.win32.WinNT.HANDLE;
+import com.wakfocus.models.ZoneDefinition;
 import com.wakfocus.utils.RuleSets;
+
+import javafx.scene.shape.Rectangle;
 
 public class ScreenCaptureService {
 
@@ -24,14 +28,52 @@ public class ScreenCaptureService {
     }
 
     public static boolean checkTimelineButtonPass(HWND hWnd, RECT rect) {
-        int cropWidth = 20, cropHeight = 20;
-        int x = rect.right - rect.left - cropWidth - (int) ((rect.right - rect.left) * 0.09);
-        int y = rect.bottom - rect.top - cropHeight - (int) ((rect.bottom - rect.top) * 0.01);
+        return checkTimelineButtonPass(hWnd, rect, false);
+    }
 
-        if (!captureRegionRaw(hWnd, x, y, cropWidth, cropHeight))
+    public static boolean checkTimelineButtonPass(HWND hWnd, RECT rect, boolean DEBUG_MODE) {
+        int heightTimelineButtonPass = (int) (rect.bottom * 0.08); 
+        int cropWidth = 8, cropHeight = heightTimelineButtonPass; // On s'interesse seulement à la barre droite du timer
+        int offsetY = 9;
+        int x = rect.right - rect.left - cropWidth;
+        int y = rect.bottom - rect.top - heightTimelineButtonPass - offsetY;
+
+        if (!captureRegionRaw(hWnd, x, y, cropWidth, cropHeight)) {
             return false;
+        }
 
-        return RuleSets.TIMELINE.stream().anyMatch(rule -> rule.matches(0, 0, cropWidth, cropHeight));
+        
+        boolean result = RuleSets.TIMELINE.stream().anyMatch(rule -> rule.matches(0, 0, cropWidth, cropHeight));
+
+        if (result && DEBUG_MODE) {
+            DebugPreviewService.generateGlobalDebugImage(hWnd,
+                    List.of(
+                            new ZoneDefinition(new Rectangle(x, y, cropWidth, cropHeight),
+                                    RuleSets.TIMELINE.get(0).getTargetColor(), RuleSets.TIMELINE.get(0).getTolerance()),
+                            new ZoneDefinition(new Rectangle(x, y, cropWidth, cropHeight),
+                                    RuleSets.TIMELINE.get(0).getTargetColor(),
+                                    RuleSets.TIMELINE.get(1).getTolerance())));
+        }
+
+        return result;
+    }
+
+    
+    public static boolean checkTimelineButtonPassAlliesAndOpponent(HWND hWnd, RECT rect) {
+        int heightTimelineButtonPass = (int) (rect.bottom * 0.08); 
+        int cropWidth = 8, cropHeight = heightTimelineButtonPass; // On s'interesse seulement à la barre droite du timer
+        int offsetY = 9;
+        int x = rect.right - rect.left - cropWidth;
+        int y = rect.bottom - rect.top - heightTimelineButtonPass - offsetY;
+
+        if (!captureRegionRaw(hWnd, x, y, cropWidth, cropHeight)) {
+            return false;
+        }
+        
+        boolean result = RuleSets.TIMELINE_ALLIES.stream().anyMatch(rule -> rule.matches(0, 0, cropWidth, cropHeight))
+            || RuleSets.TIMELINE_OPPONENT.stream().anyMatch(rule -> rule.matches(0, 0, cropWidth, cropHeight));
+
+        return result;
     }
 
     public static boolean checkMajorPaPm(HWND hWnd, RECT rect) {

@@ -19,9 +19,11 @@ public class FocusService {
     private static boolean RUNNING = true;
     private static boolean focusApplication = false;
     private static boolean notifyUser = true;
+    private static boolean notifyUserEndTurn = true;
 
     private static ConfigManager configManager = new ConfigManager();
     private static Map<HWND, TurnDescriptions> wakfuYourTurnMap = new HashMap<>();
+    private static final boolean DEBUG_MODE = false;
 
     public static void run() throws InterruptedException, IOException {
         init();
@@ -60,26 +62,43 @@ public class FocusService {
                 continue;
             }
 
-            String characterName = turnDesc.getCharacterName();
-            String windowTitle = WindowUtils.getWindowTitle(hWnd);
+            if (ScreenCaptureService.isInFight(hWnd, rect)) {
+                String characterName = turnDesc.getCharacterName();
+                String windowTitle = WindowUtils.getWindowTitle(hWnd);
+                if (!windowTitle.equals(characterName)) {
+                    turnDesc.setCharacterName(windowTitle);
+                    turnDesc.setPlayerTurn(true);
+                    turnDesc.setEndTurn(false);
+                    NotificationService.notifyFocusUser(hWnd, focusApplication, notifyUser, notifyUserEndTurn, WAKFU, false);
+                    anyWindowHasTurn = true;
+                    continue;
 
-            if (!windowTitle.equals(characterName)) {
-                turnDesc.setCharacterName(windowTitle);
-                turnDesc.setPlayerTurn(true);
-                NotificationService.notifyFocusUser(hWnd, focusApplication, notifyUser, WAKFU);
-                anyWindowHasTurn = true;
-
-            } else if (ScreenCaptureService.isInFight(hWnd, rect)) {
+                }
                 boolean result = ScreenCaptureService.checkTimelineButtonPass(hWnd, rect);
                 if (result && !isPlayerTurn && !anyWindowHasTurn) {
                     turnDesc.setCharacterName(windowTitle);
                     turnDesc.setPlayerTurn(true);
-                    NotificationService.notifyFocusUser(hWnd, focusApplication, notifyUser, WAKFU);
-                    anyWindowHasTurn = true;
+                    turnDesc.setEndTurn(false);
 
-                } else if (!result && isPlayerTurn) {
-                    turnDesc.setCharacterName(windowTitle);
-                    turnDesc.setPlayerTurn(false);
+                    NotificationService.notifyFocusUser(hWnd, focusApplication, notifyUser, notifyUserEndTurn, WAKFU, false);
+                    anyWindowHasTurn = true;
+                    if (DEBUG_MODE) {
+                        ScreenCaptureService.checkTimelineButtonPass(hWnd, rect, true);
+                    }
+                    continue;
+
+                }
+                if (isPlayerTurn) {
+                    boolean resultTimelineAlliesOpponent = ScreenCaptureService
+                            .checkTimelineButtonPassAlliesAndOpponent(hWnd, rect);
+                    if (resultTimelineAlliesOpponent) {
+                        turnDesc.setCharacterName(windowTitle);
+                        turnDesc.setPlayerTurn(false);
+                        turnDesc.setEndTurn(false);
+                    } else if (!result && !resultTimelineAlliesOpponent && !turnDesc.isEndTurn()) {
+                        turnDesc.setEndTurn(true);
+                        NotificationService.notifyFocusUser(hWnd, focusApplication, notifyUser, notifyUserEndTurn, WAKFU, true);
+                    }
                 }
             }
         }
@@ -99,11 +118,21 @@ public class FocusService {
         configManager.setNotifyUser(notifyUser);
     }
 
+    public static void toggleNotifyUserEndTurn() {
+        notifyUserEndTurn = !notifyUserEndTurn;
+        configManager.setNotifyUserEndTurn(notifyUserEndTurn);
+    }
+
     public static boolean isFocusApplication() {
         return focusApplication;
     }
 
     public static boolean isNotifyUser() {
         return notifyUser;
+    }
+
+    
+    public static boolean isNotifyUserEndTurn() {
+        return notifyUserEndTurn;
     }
 }

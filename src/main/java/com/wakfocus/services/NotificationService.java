@@ -14,6 +14,7 @@ import java.util.concurrent.Executors;
 
 public class NotificationService {
     private static final String TEXT_TO_DISPLAY = "C'est au tour de ";
+    private static final String TEXT_TO_DISPLAY_END_TIME = "C'est la fin du tour de ";
     private static final String TITLE = "WakFocus";
     private static final int DELAY_NOTIFICATION = 5000;
     private static Image bImage;
@@ -29,23 +30,28 @@ public class NotificationService {
         }
     }
 
-    public static void notifyFocusUser(HWND hWnd, boolean focusApplication, boolean notifyUser, String keyword) {
-        if (focusApplication) {
+    public static void notifyFocusUser(HWND hWnd, boolean focusApplication, boolean notifyUser, boolean notifyUserEndTurn, String keyword, boolean endTurn) {
+        if (focusApplication && !endTurn) {
             WindowUtils.focusApplication(hWnd);
         }
 
-        if (notifyUser) {
+        if (notifyUser && !endTurn) {
             String characterName = WindowUtils.getWindowTitle(hWnd).split(keyword)[0];
-            showTurnNotification(characterName, hWnd);
+            showTurnNotification(characterName, hWnd, NotificationService.TEXT_TO_DISPLAY);
+        }
+
+        if (notifyUserEndTurn && endTurn) {
+            String characterName = WindowUtils.getWindowTitle(hWnd).split(keyword)[0];
+            showTurnNotification(characterName, hWnd, NotificationService.TEXT_TO_DISPLAY_END_TIME);
         }
     }
 
-    public static void showTurnNotification(String characterName, HWND hWnd) {
+    public static void showTurnNotification(String characterName, HWND hWnd, String text) {
         notificationExecutor.submit(() -> {
             Notify.Companion.create()
                     .title(TITLE)
                     .image(bImage)
-                    .text(TEXT_TO_DISPLAY + characterName)
+                    .text(text + characterName)
                     .theme(Theme.Companion.getDefaultDark())
                     .position(Position.BOTTOM_RIGHT)
                     .hideAfter(DELAY_NOTIFICATION)

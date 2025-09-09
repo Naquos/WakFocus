@@ -6,8 +6,16 @@ import java.util.List;
 
 public class RuleSets {
     public static final List<ColorRule> TIMELINE = Arrays.asList(
-        new ColorRule(new Color(219, 177, 115), 30, 20),
-        new ColorRule(new Color(59, 60, 48), 7, 20)
+        new ColorRule(new Color(219, 177, 115), 30, 200),
+        new ColorRule(new Color(59, 60, 48), 7, 200)
+    );
+
+    public static final List<ColorRule> TIMELINE_OPPONENT = Arrays.asList(
+        new ColorRule(new Color(229,117,68), 30, 50)
+    );
+
+    public static final List<ColorRule> TIMELINE_ALLIES = Arrays.asList(
+        new ColorRule(new Color(68,155,219), 30, 50)
     );
 
     public static final List<ColorRule> PA_PM = Arrays.asList(

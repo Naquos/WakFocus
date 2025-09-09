@@ -11,7 +11,6 @@ public class WakFocus {
             FocusService.run();
             WakFocusUI.launchUI(args);
         } catch (Exception e) {
-            // TODO: handle exception
             e.printStackTrace();
         }
     }

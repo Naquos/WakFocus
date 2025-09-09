@@ -26,6 +26,7 @@ public class ConfigManager {
         if (!file.exists()) {
             properties.setProperty("focusApplication", "true");
             properties.setProperty("notifyUser", "false");
+            properties.setProperty("notifyUserEndTurn", "false");
             saveConfig();
         } else {
             try (FileInputStream fis = new FileInputStream(file)) {
@@ -44,6 +45,10 @@ public class ConfigManager {
         return Boolean.parseBoolean(properties.getProperty("notifyUser"));
     }
 
+    public boolean getNotifyUserEndTurn() {
+        return Boolean.parseBoolean(properties.getProperty("notifyUserEndTurn"));
+    }
+
     public void setFocusApplication(boolean value) {
         properties.setProperty("focusApplication", String.valueOf(value));
         saveConfig();
@@ -51,6 +56,11 @@ public class ConfigManager {
 
     public void setNotifyUser(boolean value) {
         properties.setProperty("notifyUser", String.valueOf(value));
+        saveConfig();
+    }
+    
+    public void setNotifyUserEndTurn(boolean value) {
+        properties.setProperty("notifyUserEndTurn", String.valueOf(value));
         saveConfig();
     }
 
