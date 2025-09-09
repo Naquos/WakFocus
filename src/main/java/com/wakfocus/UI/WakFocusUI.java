@@ -2,16 +2,21 @@ package com.wakfocus.UI;
 
 import java.time.LocalDate;
 
+import com.wakfocus.models.PositionComboBox;
+import com.wakfocus.services.ConfigManager;
 import com.wakfocus.services.FocusService;
 import com.wakfocus.services.NotificationService;
 
+import dorkbox.notify.Position;
 import javafx.application.Application;
 import javafx.stage.Stage;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.Scene;
+import javafx.scene.control.ComboBox;
 import javafx.scene.control.Hyperlink;
 import javafx.scene.control.Label;
+import javafx.scene.control.ListCell;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.scene.input.MouseEvent;
@@ -29,9 +34,10 @@ public class WakFocusUI extends Application {
 
     private double xOffset = 0;
     private double yOffset = 0;
+    private static ConfigManager configManager = new ConfigManager();
 
     private static final double WIDTH = 500;
-    private static final double HEIGHT = 410;
+    private static final double HEIGHT = 480;
     private static final double HEADER_HEIGHT = 48;
 
     private StackPane createStackPaneButton(String text) {
@@ -98,12 +104,12 @@ public class WakFocusUI extends Application {
         // ===== Conteneur principal avec coins arrondis =====
         VBox container = new VBox();
         container.setStyle(
-                "-fx-background-radius: 200px; -fx-z-index: -1;" // coins arrondis
+                "-fx-background-radius: 400px; -fx-z-index: -1;" // coins arrondis
         );
 
         // ===== HEADER PERSONNALISÉ =====
         StackPane header = createHeader(stage, root);
-        header.setPadding(new Insets(0, 0, HEADER_HEIGHT + 10, 0));
+        header.setPadding(new Insets(0, 0, 10, 0));
 
         // ===== CONTENU =====
         VBox content = createContent();
@@ -114,12 +120,74 @@ public class WakFocusUI extends Application {
 
         // ===== SCENE =====
         Scene scene = new Scene(root, WIDTH, HEIGHT);
+        scene.getStylesheets().add(getClass().getResource("/style.css").toExternalForm());
         scene.setFill(null);
 
         // Fenêtre sans bordures natives
         stage.initStyle(StageStyle.TRANSPARENT);
         stage.setScene(scene);
         stage.show();
+    }
+
+    private HBox createDropDownNotificationPosition() {
+        HBox checkboxContainer = new HBox();
+        checkboxContainer.setSpacing(10);
+        checkboxContainer.setAlignment(Pos.CENTER_LEFT);
+        checkboxContainer.setPadding(new Insets(0, 0, 30, 15));
+
+        Label label = new Label("Position de la pop up de notification :");
+        label.setStyle("-fx-font-size: 14px; -fx-text-fill: #FFFFFF;");
+
+        ComboBox<PositionComboBox> comboBox = new ComboBox<>();
+
+        comboBox.getItems().addAll(
+                new PositionComboBox("En haut à gauche", Position.TOP_LEFT),
+                new PositionComboBox("En haut", Position.TOP),
+                new PositionComboBox("En haut à droite", Position.TOP_RIGHT),
+                new PositionComboBox("Au centre", Position.CENTER),
+                new PositionComboBox("En bas à gauche", Position.BOTTOM_LEFT),
+                new PositionComboBox("En bas", Position.BOTTOM),
+                new PositionComboBox("En bas à droite", Position.BOTTOM_RIGHT));
+
+        // Personnaliser l’affichage dans la liste déroulante
+        comboBox.setCellFactory(cb -> new ListCell<>() {
+            @Override
+            protected void updateItem(PositionComboBox positionComboBox, boolean empty) {
+                super.updateItem(positionComboBox, empty);
+                if (empty || positionComboBox == null) {
+                    setText(null);
+                } else {
+                    setText(positionComboBox.getLabel());
+                }
+            }
+        });
+
+        // Personnaliser aussi l’affichage de l’élément sélectionné
+        comboBox.setButtonCell(new ListCell<>() {
+            @Override
+            protected void updateItem(PositionComboBox positionComboBox, boolean empty) {
+                super.updateItem(positionComboBox, empty);
+                if (empty || positionComboBox == null) {
+                    setText(null);
+                } else {
+                    setText(positionComboBox.getLabel());
+                }
+            }
+        });
+
+        comboBox.setOnAction(e -> {
+            Position position = comboBox.getValue().getPosition();
+            NotificationService.setPosition(position);
+            configManager.setNotificationPosition(position);
+        });
+
+        // Valeur par défaut
+        comboBox.setValue(comboBox.getItems().stream()
+                .filter(x -> x.getPosition() == configManager.getNotificationPosition()).findFirst().get());
+
+        checkboxContainer.getChildren().addAll(label, comboBox);
+
+        return checkboxContainer;
     }
 
     private VBox createContent() {
@@ -142,12 +210,17 @@ public class WakFocusUI extends Application {
         title.setStyle("-fx-font-size: 24px; -fx-text-fill: #FFFFFF; -fx-font-weight: bold;");
         title.setPadding(new Insets(5, 0, 20, 10));
 
-        HBox focus = createCheckbox("Activer le focus automatique sur Wakfu", FocusService.isFocusApplication(),
-                () -> FocusService.toggleFocusApplication());
+        HBox focus = createCheckbox("Activer le focus automatique sur Wakfu", NotificationService.isFocusApplication(),
+                () -> NotificationService.toggleFocusApplication());
         HBox notifications = createCheckbox("Activer les notifications de début de tour",
-                FocusService.isNotifyUser(), () -> FocusService.toggleNotifyUser());
+                NotificationService.isNotifyUser(), () -> NotificationService.toggleNotifyUser());
         HBox notificationsEndTurn = createCheckbox("Activer les notifications de fin de tour",
-                FocusService.isNotifyUserEndTurn(), () -> FocusService.toggleNotifyUserEndTurn());
+                NotificationService.isNotifyUserEndTurn(), () -> NotificationService.toggleNotifyUserEndTurn());
+        HBox enableSong = createCheckbox("Activer le son pour les notifications",
+                NotificationService.isEnableSong(), () -> NotificationService.toggleEnableSong());
+
+        // ===== LISTE DEROULANTE =====
+        HBox dropDownNotificationPosition = createDropDownNotificationPosition();
 
         // ===== GEARFU =====
         ImageView logo = new ImageView(
@@ -171,7 +244,8 @@ public class WakFocusUI extends Application {
         footer.setAlignment(Pos.BOTTOM_CENTER);
         footer.setPadding(new Insets(0, 0, 0, 30));
 
-        container.getChildren().addAll(title, focus, notifications,notificationsEndTurn, gearfuContainer, footer);
+        container.getChildren().addAll(title, focus, notifications, notificationsEndTurn, enableSong, dropDownNotificationPosition,
+                gearfuContainer, footer);
         return container;
     }
 

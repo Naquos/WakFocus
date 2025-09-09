@@ -17,11 +17,7 @@ public class FocusService {
     private static final int THREAD_SLEEP_MILLISECONDS = 200;
 
     private static boolean RUNNING = true;
-    private static boolean focusApplication = false;
-    private static boolean notifyUser = true;
-    private static boolean notifyUserEndTurn = true;
 
-    private static ConfigManager configManager = new ConfigManager();
     private static Map<HWND, TurnDescriptions> wakfuYourTurnMap = new HashMap<>();
     private static final boolean DEBUG_MODE = false;
 
@@ -42,8 +38,6 @@ public class FocusService {
     }
 
     private static void init() throws IOException {
-        focusApplication = configManager.getFocusApplication();
-        notifyUser = configManager.getNotifyUser();
     }
 
     private static void checkIfItsYourTurn() {
@@ -67,7 +61,7 @@ public class FocusService {
                 String windowTitle = WindowUtils.getWindowTitle(hWnd);
                 if (!windowTitle.equals(characterName)) {
                     setTurnDesc(turnDesc, windowTitle, true);
-                    NotificationService.notifyFocusUser(hWnd, focusApplication, notifyUser, notifyUserEndTurn, WAKFU, false);
+                    NotificationService.notifyFocusUser(hWnd, WAKFU, false);
                     anyWindowHasTurn = true;
                     continue;
 
@@ -76,7 +70,7 @@ public class FocusService {
                 if (result && !isPlayerTurn && !anyWindowHasTurn) {
                     setTurnDesc(turnDesc, windowTitle, true);
 
-                    NotificationService.notifyFocusUser(hWnd, focusApplication, notifyUser, notifyUserEndTurn, WAKFU, false);
+                    NotificationService.notifyFocusUser(hWnd, WAKFU, false);
                     anyWindowHasTurn = true;
                     if (DEBUG_MODE) {
                         ScreenCaptureService.checkTimelineButtonPass(hWnd, rect, true);
@@ -91,7 +85,7 @@ public class FocusService {
                         setTurnDesc(turnDesc, windowTitle, false);
                     } else if (!result && !resultTimelineAlliesOpponent && !turnDesc.isEndTurn()) {
                         turnDesc.setEndTurn(true);
-                        NotificationService.notifyFocusUser(hWnd, focusApplication, notifyUser, notifyUserEndTurn, WAKFU, true);
+                        NotificationService.notifyFocusUser(hWnd, WAKFU, true);
                     }
                 }
             } else {
@@ -108,33 +102,5 @@ public class FocusService {
 
     public static void stopRunning() {
         RUNNING = false;
-    }
-
-    public static void toggleFocusApplication() {
-        focusApplication = !focusApplication;
-        configManager.setFocusApplication(focusApplication);
-    }
-
-    public static void toggleNotifyUser() {
-        notifyUser = !notifyUser;
-        configManager.setNotifyUser(notifyUser);
-    }
-
-    public static void toggleNotifyUserEndTurn() {
-        notifyUserEndTurn = !notifyUserEndTurn;
-        configManager.setNotifyUserEndTurn(notifyUserEndTurn);
-    }
-
-    public static boolean isFocusApplication() {
-        return focusApplication;
-    }
-
-    public static boolean isNotifyUser() {
-        return notifyUser;
-    }
-
-    
-    public static boolean isNotifyUserEndTurn() {
-        return notifyUserEndTurn;
     }
 }

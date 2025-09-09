@@ -17,6 +17,15 @@ public class NotificationService {
     private static final String TEXT_TO_DISPLAY_END_TIME = "C'est la fin du tour de ";
     private static final String TITLE = "WakFocus";
     private static final int DELAY_NOTIFICATION = 5000;
+    private static final WAVPlayer wavPlayer = new WAVPlayer();
+
+    private static Position position = Position.BOTTOM_RIGHT;
+    private static boolean focusApplication = false;
+    private static boolean notifyUser = true;
+    private static boolean notifyUserEndTurn = true;
+    private static boolean enableSong = true;
+    private static ConfigManager configManager = new ConfigManager();
+
     private static Image bImage;
 
     // ⚡ Thread pool réutilisable (un seul thread pour toutes les notifs)
@@ -25,12 +34,17 @@ public class NotificationService {
     static {
         try {
             bImage = Toolkit.getDefaultToolkit().getImage(NotificationService.class.getResource("/images/logo.png"));
+            focusApplication = configManager.getFocusApplication();
+            notifyUser = configManager.getNotifyUser();
+            notifyUserEndTurn = configManager.getNotifyUserEndTurn();
+            position = configManager.getNotificationPosition();
+            enableSong = configManager.getEnableSong();
         } catch (Exception e) {
             e.printStackTrace();
         }
     }
 
-    public static void notifyFocusUser(HWND hWnd, boolean focusApplication, boolean notifyUser, boolean notifyUserEndTurn, String keyword, boolean endTurn) {
+    public static void notifyFocusUser(HWND hWnd, String keyword, boolean endTurn) {
         if (focusApplication && !endTurn) {
             WindowUtils.focusApplication(hWnd);
         }
@@ -44,6 +58,10 @@ public class NotificationService {
             String characterName = WindowUtils.getWindowTitle(hWnd).split(keyword)[0];
             showTurnNotification(characterName, hWnd, NotificationService.TEXT_TO_DISPLAY_END_TIME);
         }
+
+        if (enableSong) {
+            wavPlayer.play();
+        }
     }
 
     public static void showTurnNotification(String characterName, HWND hWnd, String text) {
@@ -53,7 +71,7 @@ public class NotificationService {
                     .image(bImage)
                     .text(text + characterName)
                     .theme(Theme.Companion.getDefaultDark())
-                    .position(Position.BOTTOM_RIGHT)
+                    .position(position)
                     .hideAfter(DELAY_NOTIFICATION)
                     .onClickAction((notify) -> {
                         WindowUtils.focusApplication(hWnd);
@@ -61,6 +79,50 @@ public class NotificationService {
                     })
                     .show();
         });
+    }
+
+    public static Position getPosition() {
+        return position;
+    }
+
+    public static void setPosition(Position position) {
+        NotificationService.position = position;
+    }
+
+    public static void toggleFocusApplication() {
+        focusApplication = !focusApplication;
+        configManager.setFocusApplication(focusApplication);
+    }
+
+    public static void toggleNotifyUser() {
+        notifyUser = !notifyUser;
+        configManager.setNotifyUser(notifyUser);
+    }
+
+    public static void toggleNotifyUserEndTurn() {
+        notifyUserEndTurn = !notifyUserEndTurn;
+        configManager.setNotifyUserEndTurn(notifyUserEndTurn);
+    }
+
+    public static void toggleEnableSong() {
+        enableSong = !enableSong;
+        configManager.setEnableSong(enableSong);
+    }
+
+    public static boolean isFocusApplication() {
+        return focusApplication;
+    }
+
+    public static boolean isNotifyUser() {
+        return notifyUser;
+    }
+
+    public static boolean isNotifyUserEndTurn() {
+        return notifyUserEndTurn;
+    }
+
+    public static boolean isEnableSong() {
+        return enableSong;
     }
 
     // Pour bien fermer l'appli proprement
