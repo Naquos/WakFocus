@@ -66,9 +66,7 @@ public class FocusService {
                 String characterName = turnDesc.getCharacterName();
                 String windowTitle = WindowUtils.getWindowTitle(hWnd);
                 if (!windowTitle.equals(characterName)) {
-                    turnDesc.setCharacterName(windowTitle);
-                    turnDesc.setPlayerTurn(true);
-                    turnDesc.setEndTurn(false);
+                    setTurnDesc(turnDesc, windowTitle, true);
                     NotificationService.notifyFocusUser(hWnd, focusApplication, notifyUser, notifyUserEndTurn, WAKFU, false);
                     anyWindowHasTurn = true;
                     continue;
@@ -76,9 +74,7 @@ public class FocusService {
                 }
                 boolean result = ScreenCaptureService.checkTimelineButtonPass(hWnd, rect);
                 if (result && !isPlayerTurn && !anyWindowHasTurn) {
-                    turnDesc.setCharacterName(windowTitle);
-                    turnDesc.setPlayerTurn(true);
-                    turnDesc.setEndTurn(false);
+                    setTurnDesc(turnDesc, windowTitle, true);
 
                     NotificationService.notifyFocusUser(hWnd, focusApplication, notifyUser, notifyUserEndTurn, WAKFU, false);
                     anyWindowHasTurn = true;
@@ -92,16 +88,22 @@ public class FocusService {
                     boolean resultTimelineAlliesOpponent = ScreenCaptureService
                             .checkTimelineButtonPassAlliesAndOpponent(hWnd, rect);
                     if (resultTimelineAlliesOpponent) {
-                        turnDesc.setCharacterName(windowTitle);
-                        turnDesc.setPlayerTurn(false);
-                        turnDesc.setEndTurn(false);
+                        setTurnDesc(turnDesc, windowTitle, false);
                     } else if (!result && !resultTimelineAlliesOpponent && !turnDesc.isEndTurn()) {
                         turnDesc.setEndTurn(true);
                         NotificationService.notifyFocusUser(hWnd, focusApplication, notifyUser, notifyUserEndTurn, WAKFU, true);
                     }
                 }
+            } else {
+                setTurnDesc(turnDesc, WAKFU, false);
             }
         }
+    }
+
+    private static void setTurnDesc(TurnDescriptions turnDesc, String windowTitle, boolean isPlayerTurn) {
+        turnDesc.setCharacterName(windowTitle);
+        turnDesc.setPlayerTurn(isPlayerTurn);
+        turnDesc.setEndTurn(false);
     }
 
     public static void stopRunning() {
