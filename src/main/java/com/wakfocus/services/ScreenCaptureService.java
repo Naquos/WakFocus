@@ -32,8 +32,8 @@ public class ScreenCaptureService {
     }
 
     public static boolean checkTimelineButtonPass(HWND hWnd, RECT rect, boolean DEBUG_MODE) {
-        int heightTimelineButtonPass = (int) (rect.bottom * 0.08); 
-        int cropWidth = 8, cropHeight = heightTimelineButtonPass; // On s'interesse seulement à la barre droite du timer
+        int heightTimelineButtonPass = (int) (rect.bottom * 0.08);
+        int cropWidth = 3, cropHeight = heightTimelineButtonPass; // On s'interesse seulement à la barre droite du timer
         int offsetY = 9;
         int x = rect.right - rect.left - cropWidth;
         int y = rect.bottom - rect.top - heightTimelineButtonPass - offsetY;
@@ -42,7 +42,6 @@ public class ScreenCaptureService {
             return false;
         }
 
-        
         boolean result = RuleSets.TIMELINE.stream().anyMatch(rule -> rule.matches(0, 0, cropWidth, cropHeight));
 
         if (result && DEBUG_MODE) {
@@ -58,10 +57,9 @@ public class ScreenCaptureService {
         return result;
     }
 
-    
     public static boolean checkTimelineButtonPassAlliesAndOpponent(HWND hWnd, RECT rect) {
-        int heightTimelineButtonPass = (int) (rect.bottom * 0.08); 
-        int cropWidth = 8, cropHeight = heightTimelineButtonPass; // On s'interesse seulement à la barre droite du timer
+        int heightTimelineButtonPass = (int) (rect.bottom * 0.08);
+        int cropWidth = 3, cropHeight = heightTimelineButtonPass; // On s'interesse seulement à la barre droite du timer
         int offsetY = 9;
         int x = rect.right - rect.left - cropWidth;
         int y = rect.bottom - rect.top - heightTimelineButtonPass - offsetY;
@@ -69,9 +67,9 @@ public class ScreenCaptureService {
         if (!captureRegionRaw(hWnd, x, y, cropWidth, cropHeight)) {
             return false;
         }
-        
+
         boolean result = RuleSets.TIMELINE_ALLIES.stream().anyMatch(rule -> rule.matches(0, 0, cropWidth, cropHeight))
-            || RuleSets.TIMELINE_OPPONENT.stream().anyMatch(rule -> rule.matches(0, 0, cropWidth, cropHeight));
+                || RuleSets.TIMELINE_OPPONENT.stream().anyMatch(rule -> rule.matches(0, 0, cropWidth, cropHeight));
 
         return result;
     }
@@ -82,7 +80,7 @@ public class ScreenCaptureService {
         int winHeight = rect.bottom - rect.top;
 
         int x = (int) (winWidth * 0.51);
-        int y = winHeight - cropHeight - (int) (winHeight * 0.01);
+        int y = winHeight - cropHeight - (int) (winHeight * 0.05);
 
         if (!captureRegionRaw(hWnd, x, y, cropWidth, cropHeight))
             return false;
