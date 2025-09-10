@@ -5,6 +5,7 @@ import dorkbox.notify.Position;
 import dorkbox.notify.Theme;
 
 import com.sun.jna.platform.win32.WinDef.HWND;
+import com.wakfocus.models.ThemeEnum;
 import com.wakfocus.utils.WindowUtils;
 
 import java.awt.Image;
@@ -20,6 +21,7 @@ public class NotificationService {
     private static final WAVPlayer wavPlayer = new WAVPlayer();
 
     private static Position position = Position.BOTTOM_RIGHT;
+    private static ThemeEnum theme = ThemeEnum.DARK_THEME;
     private static boolean focusApplication = false;
     private static boolean notifyUser = true;
     private static boolean notifyUserEndTurn = true;
@@ -39,9 +41,14 @@ public class NotificationService {
             notifyUserEndTurn = configManager.getNotifyUserEndTurn();
             position = configManager.getNotificationPosition();
             enableSong = configManager.getEnableSong();
+            theme = configManager.getTheme();
         } catch (Exception e) {
             e.printStackTrace();
         }
+    }
+
+    private static Theme convertToThemeNotify(ThemeEnum theme) {
+        return ThemeEnum.DARK_THEME.equals(theme) ? Theme.Companion.getDefaultDark() : Theme.Companion.getDefaultLight();
     }
 
     public static void notifyFocusUser(HWND hWnd, String keyword, boolean endTurn) {
@@ -70,7 +77,7 @@ public class NotificationService {
                     .title(TITLE)
                     .image(bImage)
                     .text(text + characterName)
-                    .theme(Theme.Companion.getDefaultDark())
+                    .theme(convertToThemeNotify(theme))
                     .position(position)
                     .hideAfter(DELAY_NOTIFICATION)
                     .onClickAction((notify) -> {
@@ -87,6 +94,16 @@ public class NotificationService {
 
     public static void setPosition(Position position) {
         NotificationService.position = position;
+        configManager.setNotificationPosition(position);
+    }
+    
+    public static ThemeEnum getTheme() {
+        return theme;
+    }
+
+    public static void setTheme(ThemeEnum theme) {
+        NotificationService.theme = theme;
+        configManager.setTheme(theme);
     }
 
     public static void toggleFocusApplication() {

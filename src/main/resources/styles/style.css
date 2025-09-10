@@ -1,0 +1,25 @@
+.combo-box, .button {
+    -fx-background-color: #6C634E;   /* fond sombre */
+    -fx-border-top-color: #A59F91;       
+    -fx-border-top-width: "3px";       
+    -fx-border-bottom-color: #423B2E;       
+    -fx-border-bottom-width: "3px";       
+    -fx-border-radius: 5;
+    -fx-background-radius: 5;
+    -fx-text-fill: #ffffff;          /* texte blanc */
+    -fx-padding: 4 8 4 8;
+}
+
+.combo-box .arrow {
+    -fx-background-color: #ffffff;   /* flèche turquoise */
+}
+
+.combo-box .list-cell {
+    -fx-background-color: #6C634E;   /* fond sombre */
+    -fx-text-fill: #ffffff;          /* texte blanc */
+}
+
+.combo-box .list-cell:hover {
+    -fx-background-color: #A58E63;   /* survol turquoise */
+    -fx-text-fill: #ffffff;          /* texte noir pour contraste */
+}

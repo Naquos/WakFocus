@@ -6,7 +6,10 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.util.Properties;
 
+import com.wakfocus.models.ThemeEnum;
+
 import dorkbox.notify.Position;
+import dorkbox.notify.Theme;
 
 public class ConfigManager {
     private static final String CONFIG_FILE = System.getProperty("user.home")
@@ -18,6 +21,7 @@ public class ConfigManager {
     private static String notifyUserEndTurn = "notifyUserEndTurn";
     private static String notificationPosition = "notificationPosition";
     private static String enableSong = "enableSong";
+    private static String theme = "theme";
 
     public ConfigManager() {
         properties = new Properties();
@@ -36,6 +40,7 @@ public class ConfigManager {
             properties.setProperty(notifyUserEndTurn, "false");
             properties.setProperty(enableSong, "false");
             properties.setProperty(notificationPosition, Position.BOTTOM_RIGHT.toString());
+            properties.setProperty(theme, ThemeEnum.DARK_THEME.name());
             saveConfig();
         } else {
             try (FileInputStream fis = new FileInputStream(file)) {
@@ -70,6 +75,14 @@ public class ConfigManager {
         return Position.valueOf(properties.getProperty(notificationPosition));
     }
 
+    public ThemeEnum getTheme() {
+        String result = properties.getProperty(theme);
+        if (result == null) {
+            return ThemeEnum.DARK_THEME;
+        } 
+        return ThemeEnum.valueOf(result);
+    }
+
     public void setFocusApplication(boolean value) {
         properties.setProperty(focusApplication, String.valueOf(value));
         saveConfig();
@@ -92,6 +105,11 @@ public class ConfigManager {
 
     public void setNotificationPosition(Position value) {
         properties.setProperty(notificationPosition, String.valueOf(value));
+        saveConfig();
+    }
+
+    public void setTheme(ThemeEnum value) {
+        properties.setProperty(theme, value.name());
         saveConfig();
     }
 
