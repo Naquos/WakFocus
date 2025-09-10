@@ -9,7 +9,6 @@ import java.util.Properties;
 import com.wakfocus.models.ThemeEnum;
 
 import dorkbox.notify.Position;
-import dorkbox.notify.Theme;
 
 public class ConfigManager {
     private static final String CONFIG_FILE = System.getProperty("user.home")
