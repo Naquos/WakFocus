@@ -11,8 +11,6 @@ import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
 import javafx.stage.Stage;
 
-import java.time.LocalDate;
-
 
 public class ContentView {
 
@@ -67,14 +65,21 @@ public class ContentView {
                 gearfuContainer.setPadding(new Insets(5, 0, 20, 10));
 
                 // Footer
-                Label footer = new Label("WAKFU MMORPG : © 2012-" + LocalDate.now().getYear()
-                                + " Ankama Studio. Tous droits réservés");
+                Label footer = new Label("WAKFU est un MMORPG édité par Ankama.");
                 footer.setStyle("-fx-font-size: 12px; -fx-text-fill: #FFFFFF;");
                 footer.setAlignment(Pos.BOTTOM_CENTER);
-                footer.setPadding(new Insets(0, 0, 0, 30));
+
+                Label footer2 = new Label("WakFocus est une application non officielle sans aucun lien avec Ankama.");
+                footer2.setStyle("-fx-font-size: 12px; -fx-text-fill: #FFFFFF;");
+                footer2.setAlignment(Pos.BOTTOM_CENTER);
+
+
+                VBox footerBox = new VBox(0);
+                footerBox.setAlignment(Pos.CENTER);
+                footerBox.getChildren().addAll(footer, footer2);
 
                 container.getChildren().addAll(title, focus, notifications, notificationsEndTurn, enableSong,
-                                dropDownNotificationPosition, dropDownTheme, chooseSoundBtn, gearfuContainer, footer);
+                                dropDownNotificationPosition, dropDownTheme, chooseSoundBtn, gearfuContainer, footerBox);
         }
 
         public VBox getNode() {

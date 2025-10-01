@@ -31,6 +31,9 @@ public class RuleSets {
     );
 
     public static final List<ColorRule> BOUTIQUE = Arrays.asList(
-        new ColorRule(new Color(103, 93, 73), 10, 20)
+        new ColorRule(new Color(103, 93, 73), 10, 20),
+        new ColorRule(new Color(0, 184, 188), 10, 10),
+        new ColorRule(new Color(0, 63, 71), 10, 10),
+        new ColorRule(new Color(234, 234, 234), 10, 10)
     );
 }

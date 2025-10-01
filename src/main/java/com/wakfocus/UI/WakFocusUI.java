@@ -9,7 +9,7 @@ import javafx.stage.StageStyle;
 public class WakFocusUI extends Application {
 
     private static final double WIDTH = 500;
-    private static final double HEIGHT = 600;
+    private static final double HEIGHT = 620;
 
     @Override
     public void start(Stage stage) {
