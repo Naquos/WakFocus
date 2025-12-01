@@ -56,7 +56,9 @@ public class FocusService {
                 continue;
             }
 
-            if (ScreenCaptureService.isInFight(hWnd, rect)) {
+            boolean isInFight = ScreenCaptureService.isInFight(hWnd, rect);
+
+            if (isInFight) {
                 String characterName = turnDesc.getCharacterName();
                 String windowTitle = WindowUtils.getWindowTitle(hWnd);
                 if (!windowTitle.equals(characterName)) {

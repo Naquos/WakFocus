@@ -24,7 +24,9 @@ public class ScreenCaptureService {
 
     // === LOGIQUE MÉTIER ===
     public static boolean isInFight(HWND hWnd, RECT rect) {
-        return !checkBoutonBoutique(hWnd, rect) && checkMajorPaPm(hWnd, rect);
+        boolean absenceBoutonBoutique = !checkBoutonBoutique(hWnd, rect);
+        boolean presenceMajorPaPm = checkMajorPaPm(hWnd, rect);
+        return absenceBoutonBoutique && presenceMajorPaPm;
     }
 
     public static boolean checkTimelineButtonPass(HWND hWnd, RECT rect) {
@@ -85,8 +87,10 @@ public class ScreenCaptureService {
         if (!captureRegionRaw(hWnd, x, y, cropWidth, cropHeight))
             return false;
 
-        return RuleSets.PA_PM.stream().allMatch(rule -> rule.matches(0, 0, cropWidth, cropHeight)) ||
-                RuleSets.PA_PM_VELOCITE.stream().allMatch(rule -> rule.matches(0, 0, cropWidth, cropHeight));
+        boolean PA_PM = RuleSets.PA_PM.stream().allMatch(rule -> rule.matches(0, 0, cropWidth, cropHeight));
+        boolean PA_PM_VELOCITE = RuleSets.PA_PM_VELOCITE.stream().allMatch(rule -> rule.matches(0, 0, cropWidth, cropHeight));
+
+        return PA_PM || PA_PM_VELOCITE;
     }
 
     public static boolean checkBoutonBoutique(HWND hWnd, RECT rect) {
@@ -114,7 +118,7 @@ public class ScreenCaptureService {
         HBITMAP hBitmap = GDI32.INSTANCE.CreateCompatibleBitmap(hdcWindow, w, h);
         HANDLE hOld = GDI32.INSTANCE.SelectObject(hdcMemDC, hBitmap);
 
-        GDI32.INSTANCE.BitBlt(hdcMemDC, 0, 0, w, h, hdcWindow, rect.left + x, rect.top + y, GDI32.SRCCOPY);
+        GDI32.INSTANCE.BitBlt(hdcMemDC, 0, 0, w, h, hdcWindow, x, y, GDI32.SRCCOPY);
 
         long bufferSize = w * h * 4L;
         if (reusableBufferRaw == null || reusableBufferRaw.size() < bufferSize) {
@@ -153,6 +157,7 @@ public class ScreenCaptureService {
 
         BufferedImage image = new BufferedImage(lastWidth, lastHeight, BufferedImage.TYPE_INT_ARGB);
         int[] pixels = ((DataBufferInt) image.getRaster().getDataBuffer()).getData();
+
 
         // Copie brute du buffer → tableau int
         reusableBufferRaw.read(0, pixels, 0, pixels.length);

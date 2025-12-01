@@ -71,7 +71,6 @@ public class DebugPreviewService {
                         if (zone.matches(pixelColor)) {
                             pixelValid = true;
                         }
-                        break;
                     }
                 }
 

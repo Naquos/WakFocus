@@ -30,12 +30,12 @@ public class FocusColorUtils {
         for (int yy = startY; yy < startY + h && yy < bufferHeight; yy++) {
             for (int xx = startX; xx < startX + w && xx < bufferWidth; xx++) {
                 int idx = (yy * bufferWidth + xx) * 4;
-
                 int b = buffer.get(idx) & 0xFF;
                 int g = buffer.get(idx + 1) & 0xFF;
                 int r = buffer.get(idx + 2) & 0xFF;
 
-                if (isColorMatch(r, g, b, target, tolerance)) {
+                boolean isColorMatch = isColorMatch(r, g, b, target, tolerance);
+                if (isColorMatch) {
                     pixelsFound++;
                     if (pixelsFound >= minPixels) {
                         return true; // early exit

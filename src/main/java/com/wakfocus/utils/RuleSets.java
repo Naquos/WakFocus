@@ -19,15 +19,15 @@ public class RuleSets {
     );
 
     public static final List<ColorRule> PA_PM = Arrays.asList(
-        new ColorRule(new Color(11, 145, 227), 30, 20),
-        new ColorRule(new Color(32, 126, 5), 30, 20),
-        new ColorRule(new Color(255, 255, 255), 30, 20)
+        new ColorRule(new Color(11, 145, 227), 30, -1), // Bleu clair
+        // new ColorRule(new Color(32, 126, 5), 30, 1) // Vert clair
+        new ColorRule(new Color(255, 255, 255), 30, -1) // Blanc
     );
 
     public static final List<ColorRule> PA_PM_VELOCITE = Arrays.asList(
-        new ColorRule(new Color(6, 47, 75), 7, 20),
-        new ColorRule(new Color(31, 59, 32), 7, 20),
-        new ColorRule(new Color(63, 74, 78), 7, 20)
+        new ColorRule(new Color(6, 47, 75), 7, 10), // BLeu foncé
+        new ColorRule(new Color(31, 59, 32), 7, 10),// Vert foncé
+        new ColorRule(new Color(63, 74, 78), 7, 10) // Gris foncé
     );
 
     public static final List<ColorRule> BOUTIQUE = Arrays.asList(
